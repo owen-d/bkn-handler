@@ -1,4 +1,3 @@
-extern crate rocket;
 // extern crate serialize;
 
 use rocket::request::FromParam;
@@ -47,10 +46,11 @@ impl EddystoneUID {
 impl<'r> FromParam<'r> for EddystoneUID {
     type Error = &'r RawStr;
 
-    fn from_param(param: &'r RawStr) -> Result<Self, Self::Error>{
+    fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
         param.url_decode()
+            .map_err(|_| param)
             .map(|s| s.into_bytes())
-            .map(|x| {
+            .and_then(|x| {
                 match x.len() {
                     // full uid (namespace + id)
                     16 => {
@@ -61,33 +61,13 @@ impl<'r> FromParam<'r> for EddystoneUID {
                         Ok(eddy)
                     },
                     // just uid
-                    // 6 => 1,
+                    6 => {
+                        let mut eddy = EddystoneUID::new();
+                        eddy.with_id(x.iter().take(6));
+                        Ok(eddy)
+                    },
                     _ => Err(param),
                 }
             })
-            .map_err(|_| Err(param))
     }
-
 }
-
-// impl<'r> FromParam<'r> for MyParam<'r> {
-//     type Error = &'r RawStr;
-
-//     fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
-//         let (key, val_str) = match param.find(':') {
-//             Some(i) if i > 0 => (&param[..i], &param[(i + 1)..]),
-//             _ => return Err(param)
-//         };
-
-//         if !key.chars().all(|c| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-//             return Err(param);
-//         }
-
-//         val_str.parse().map(|value| {
-//             MyParam {
-//                 key: key,
-//                 value: value
-//             }
-//         }).map_err(|_| param)
-//     }
-// }
