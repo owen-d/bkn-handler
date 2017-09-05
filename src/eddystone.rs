@@ -4,7 +4,7 @@ use rocket::request::FromParam;
 use rocket::http::RawStr;
 use self::hex::FromHex;
 
-struct EddystoneUID {
+pub struct EddystoneUID {
     ns: Option<[u8; 10]>,
     id: [u8; 6],
 }

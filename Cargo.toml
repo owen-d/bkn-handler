@@ -7,3 +7,10 @@ authors = ["owen-d <ow.diehl@gmail.com>"]
 rocket = "0.3.2"
 rocket_codegen = "0.3.2"
 hex = "0.2.0"
+serde = "1.0"
+serde_derive = "1.0"
+
+[dependencies.rocket_contrib]
+version = "*"
+default-features = false
+features = ["handlebars_templates"]
