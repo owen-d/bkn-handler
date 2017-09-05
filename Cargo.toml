@@ -6,3 +6,4 @@ authors = ["owen-d <ow.diehl@gmail.com>"]
 [dependencies]
 rocket = "0.3.2"
 rocket_codegen = "0.3.2"
+hex = "0.2.0"

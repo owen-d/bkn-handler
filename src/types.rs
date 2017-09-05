@@ -1,8 +1,8 @@
-// extern crate serialize;
+extern crate hex;
 
 use rocket::request::FromParam;
 use rocket::http::RawStr;
-// use serialize::hex::ToHex;
+use self::hex::FromHex;
 
 struct EddystoneUID {
     ns: Option<[u8; 10]>,
@@ -49,7 +49,7 @@ impl<'r> FromParam<'r> for EddystoneUID {
     fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
         param.url_decode()
             .map_err(|_| param)
-            .map(|s| s.into_bytes())
+            .and_then(|s| Vec::from_hex(s).map_err(|_| param))
             .and_then(|x| {
                 match x.len() {
                     // full uid (namespace + id)
