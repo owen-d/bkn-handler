@@ -24,18 +24,13 @@ struct TemplateContext {
     name: String,
 }
 
-
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
 /*
 Need to do a few things on request lifecycle
 1) match beaconName & validate. If invalid (non hex, etc), use some 404 page
-2) fetch beacon from cass. if none match, 404
-3) inject cass code into html template
-4) redirect
-5) after-effect: increment count in cass.
+3) redirect
+4) drop 'passby metric in cass'
+5) on hit when referrer = self, fetch beacon msg from cass
+4) after-effect: increment count in cass.
  */
 
 #[get("/bkn/<_name>", rank=2)]
