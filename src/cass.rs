@@ -15,13 +15,13 @@ use self::cdrs::types::value::Value;
 use self::cdrs::types::IntoRustByName;
 
 use self::uuid::Uuid;
-use std::error::Error;
 use std::convert::Into;
+use super::errors::*;
 
 pub struct Conn(r2d2::Pool<ConnectionManager<NoneAuthenticator, TransportTcp>>);
 
 impl Conn {
-    pub fn new(addr: &str, size: u32) -> Result<Self, &str> {
+    pub fn new(addr: &str, size: u32) -> Result<Self> {
         let config = r2d2::Config::builder()
             .pool_size(size)
             .build();
@@ -29,12 +29,10 @@ impl Conn {
         let authenticator = NoneAuthenticator;
         let manager = ConnectionManager::new(transport, authenticator, Compression::None);
 
-        r2d2::Pool::new(config, manager)
-            .map_err(|e| e.description())
-            .map(|pool| Conn(pool))
+        r2d2::Pool::new(config, manager).map(|pool| Conn(pool)).chain_err(|| "Failed to initialize pool")
     }
 
-    pub fn fetch_bkn_msg(&self, eddy: &EddystoneUID) -> Result<Beacon, &str> {
+    pub fn fetch_bkn_msg(&self, eddy: &EddystoneUID) -> Result<Beacon> {
         let pool = self.0.clone();
         let values: Vec<Value> = vec![eddy.to_vec().into()];
         let query = QueryBuilder::new("SELECT name, msg_url, user_id FROM bkn.beaons_by_id WHERE \
@@ -43,22 +41,22 @@ impl Conn {
             .finalize();
 
         let body = pool.get()
-            .map_err(|e| e.description())
-            .and_then(|conn| {
+            .chain_err(|| "failed pool initialization")
+            .and_then(|mut conn| {
                 conn.query(query, false, false)
-                    .map_err(|e| e.description())
+                    .chain_err(|| "failed query")
             })
-            .and_then(|res| {
-                res.get_body()
-                    .map_err(|e| e.description())
+            .and_then(|query| {
+                query.get_body()
+                    .chain_err(|| "failed to get body")
             })?;
 
         let none_matched = "no beacons matched";
 
         body.into_rows()
-            .ok_or(none_matched)
+            .ok_or(none_matched.into())
             .and_then(|rows| {
-                let bkns: Vec<Beacon> = rows.iter()
+                let mut bkns: Vec<Beacon> = rows.iter()
                     .map(|row| {
                         let mut bkn = Beacon { ..Default::default() };
                         if let Ok(name) = row.get_r_by_name("name") {
@@ -71,8 +69,7 @@ impl Conn {
                         }
 
                         if let Ok(user_id) = row.get_r_by_name("user_id") {
-                            let _: Uuid = user_id;
-                            // bkn.user_id = user_id;
+                            bkn.user_id = user_id;
                         }
 
                         bkn
@@ -80,7 +77,7 @@ impl Conn {
                     .take(1)
                     .collect();
                 match bkns.len() {
-                    0 => Err(none_matched),
+                    0 => Err(none_matched.into()),
                     _ => Ok(bkns.remove(0)),
                 }
             })

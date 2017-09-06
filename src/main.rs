@@ -1,13 +1,24 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
-#[macro_use] extern crate serde_derive;
+#![recursion_limit = "1024"]
+
+#[macro_use]
+extern crate error_chain;
+
+#[macro_use]
+extern crate serde_derive;
 extern crate rocket;
 extern crate rocket_contrib;
 mod eddystone;
 mod referrer;
 mod cass;
+mod errors {
+    // Create the Error, ErrorKind, ResultExt, and Result types
+    error_chain!{}
+}
 
+// use errors::*;
 use rocket_contrib::Template;
 use eddystone::EddystoneUID;
 use referrer::Referrer;
@@ -38,15 +49,16 @@ Need to do a few things on request lifecycle
  */
 
 #[get("/bkn/<_name>", rank=2)]
-fn handle_impression(_name: EddystoneUID, _referrer: Referrer, _conn: State<cass::Conn>) -> Redirect {
+fn handle_impression(_name: EddystoneUID,
+                     _referrer: Referrer,
+                     _conn: State<cass::Conn>)
+                     -> Redirect {
     Redirect::found("https://www.google.com")
 }
 
 #[get("/bkn/<_name>", rank=3)]
 fn handle_passby(_name: EddystoneUID, _conn: State<cass::Conn>) -> Template {
-    let context = TemplateContext {
-        name: format!("placeholder"),
-    };
+    let context = TemplateContext { name: format!("placeholder") };
 
     Template::render("bkn-redirect", &context)
 }
