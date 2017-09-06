@@ -14,7 +14,7 @@ use rocket::response::Redirect;
 
 fn main() {
     rocket::ignite()
-        .mount("/", routes![index, handle_impression, handle_passby])
+        .mount("/", routes![handle_impression, handle_passby])
         .attach(Template::fairing())
         .launch();
 }

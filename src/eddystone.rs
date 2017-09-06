@@ -4,15 +4,17 @@ use rocket::request::FromParam;
 use rocket::http::RawStr;
 use self::hex::FromHex;
 
+const DEFAULT_NS: &str = "ecde1818fe845f2e3863";
+
 pub struct EddystoneUID {
-    ns: Option<[u8; 10]>,
+    ns: [u8; 10],
     id: [u8; 6],
 }
 
 impl EddystoneUID {
     fn new() -> Self {
         EddystoneUID {
-            ns: None,
+            ns: [0;10],
             id: [0; 6],
         }
     }
@@ -25,7 +27,7 @@ impl EddystoneUID {
         for (i, byte) in ns.take(10).enumerate() {
             new_ns[i] = *byte
         }
-        self.ns = Some(new_ns);
+        self.ns = new_ns;
         self
 
     }
@@ -40,6 +42,10 @@ impl EddystoneUID {
 
         self.id = new_id;
         self
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        [&self.ns.to_vec()[..], &self.id.to_vec()[..]].concat()
     }
 }
 
@@ -63,6 +69,7 @@ impl<'r> FromParam<'r> for EddystoneUID {
                     // just uid
                     6 => {
                         let mut eddy = EddystoneUID::new();
+                        eddy.with_ns(Vec::from_hex(DEFAULT_NS).unwrap().iter().take(10));
                         eddy.with_id(x.iter().take(6));
                         Ok(eddy)
                     },
