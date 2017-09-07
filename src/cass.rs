@@ -13,7 +13,7 @@ use self::cdrs::transport::TransportTcp;
 use self::cdrs::connection_manager::ConnectionManager;
 use self::cdrs::compression::Compression;
 use self::cdrs::query::QueryBuilder;
-use self::cdrs::types::value::Value;
+use self::cdrs::types::value::{Value, Bytes};
 use self::cdrs::types::IntoRustByName;
 use self::rocket::request::{self, FromRequest};
 use self::rocket::{Request, State, Outcome};
@@ -39,7 +39,7 @@ impl Conn {
 
     pub fn fetch_bkn_msg(&self, eddy: &EddystoneUID) -> Result<Beacon> {
         let pool = self.0.clone();
-        let values: Vec<Value> = vec![eddy.to_vec().into()];
+        let values: Vec<Value> = vec![Bytes::new(eddy.to_vec()).into()];
         let query = QueryBuilder::new("SELECT name, msg_url, user_id, deploy_name FROM \
                                        bkn.beacons_by_id WHERE name = ? LIMIT 1;")
             .values(values)
@@ -101,7 +101,7 @@ impl Conn {
     fn add_impression(&self, keyspace: &str, table: &str, bkn: &Beacon) -> Result<()> {
         let pool = self.0.clone();
         let now = time::get_time();
-        let values: Vec<Value> = vec![bkn.name.clone().into(),
+        let values: Vec<Value> = vec![Bytes::new(bkn.name.clone()).into(),
                                       bkn.deploy_name.clone().into(),
                                       now.into(),
                                       bkn.user_id.into()];
