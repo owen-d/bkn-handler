@@ -27,6 +27,8 @@ use referrer::Referrer;
 use rocket::response::Redirect;
 use rocket::State;
 
+const DEFAULT_REDIRECT_URL: &'static str = "https://my.sharecro.ws";
+
 fn main() {
     if let Err(ref e) = run() {
         use std::io::Write;
@@ -50,12 +52,14 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let conn = cass::Conn::new("127.0.0.1:9042", 15).chain_err(|| "failed to connect to cassandra")?;
+    let conn =
+        cass::Conn::new("127.0.0.1:9042", 15).chain_err(|| "failed to connect to cassandra")?;
     Err(Error::with_chain(rocket::ignite()
-        .mount("/", routes![handle_impression, handle_passby])
-        .attach(Template::fairing())
-        .manage(conn)
-        .launch(), "rocket error"))
+                              .mount("/", routes![handle_impression, handle_passby])
+                              .attach(Template::fairing())
+                              .manage(conn)
+                              .launch(),
+                          "rocket error"))
 
 }
 
@@ -78,9 +82,13 @@ fn handle_impression(name: EddystoneUID, _referrer: Referrer, conn: State<cass::
     conn.fetch_bkn_msg(&name)
         .map(|bkn| {
             let _ = conn.add_interaction(&bkn).unwrap_or(());
-            Redirect::found(&bkn.msg_url)
+            if &bkn.msg_url == "" {
+                Redirect::found(DEFAULT_REDIRECT_URL)
+            } else {
+                Redirect::found(&bkn.msg_url)
+            }
         })
-        .unwrap_or(Redirect::found("https://www.google.com"))
+        .unwrap_or(Redirect::found(DEFAULT_REDIRECT_URL))
 }
 
 #[get("/bkn/<name>", rank=3)]
