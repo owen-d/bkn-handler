@@ -56,7 +56,7 @@ fn run() -> Result<()> {
     let conf = config::Env::new().load_env();
     let conn = cass::Conn::new(&format!("{}:{}", conf.cass_addr, conf.cass_port),
                                conf.cass_pool_size).chain_err(|| "failed to connect to cassandra")?;
-    let allowed_refs = referrer::AllowedReferrers(conf.referrers.clone());
+    let allowed_refs = AllowedReferrers(conf.referrers);
     Err(Error::with_chain(rocket::ignite()
                               .mount("/", routes![handle_impression, handle_passby])
                               .attach(Template::fairing())

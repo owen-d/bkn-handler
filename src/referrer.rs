@@ -1,19 +1,25 @@
+extern crate url;
+
+use self::url::Url;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
 
 pub struct AllowedReferrers(pub Vec<String>);
 
+const HOST_MATCHER: &'static Fn(&str, &str) -> bool = &|allowed_host, incoming| {
+    Url::parse(incoming)
+        .map(|url| url.host_str() == Some(allowed_host))
+        .unwrap_or(false)
+};
+
 impl AllowedReferrers {
     pub fn is_allowed(&self, referrer: &Referrer) -> bool {
-        self.0.iter().fold(false, |acc, x| {
-            if acc {
-                acc
-            }
-            else if *x == "*" {
-                true
-            } else {
-                *x == referrer.0
-            }
+        self.0.iter().fold(false, |acc, x| if acc {
+            acc
+        } else if *x == "*" {
+            true
+        } else {
+            HOST_MATCHER(x, &referrer.0)
         })
     }
 }
