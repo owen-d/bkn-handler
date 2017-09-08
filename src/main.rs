@@ -18,6 +18,7 @@ mod errors {
     // Create the Error, ErrorKind, ResultExt, and Result types
     error_chain!{}
 }
+mod config;
 
 use errors::*;
 use scopeguard::guard;
@@ -52,8 +53,9 @@ fn main() {
 }
 
 fn run() -> Result<()> {
+    let conf = config::Env::new().load_env();
     let conn =
-        cass::Conn::new("127.0.0.1:9042", 15).chain_err(|| "failed to connect to cassandra")?;
+        cass::Conn::new(&format!("{}:{}", conf.cass_addr, conf.cass_port), conf.cass_pool_size).chain_err(|| "failed to connect to cassandra")?;
     Err(Error::with_chain(rocket::ignite()
                               .mount("/", routes![handle_impression, handle_passby])
                               .attach(Template::fairing())
