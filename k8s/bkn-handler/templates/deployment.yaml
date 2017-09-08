@@ -47,6 +47,8 @@ spec:
               value: "production"
             - name: ROCKET_ENV
               value: "production"
+            - name: ROCKET_ADDRESS
+              value: "0.0.0.0"
             - name: ROCKET_PORT
               value: {{ .Values.bknHandler.internalPort | quote }}
             - name: CASSANDRA_ADDRESS
