@@ -24,7 +24,7 @@ use errors::*;
 use scopeguard::guard;
 use rocket_contrib::Template;
 use eddystone::EddystoneUID;
-use referrer::Referrer;
+use referrer::{Referrer, AllowedReferrers};
 use rocket::response::Redirect;
 use rocket::State;
 
@@ -54,12 +54,14 @@ fn main() {
 
 fn run() -> Result<()> {
     let conf = config::Env::new().load_env();
-    let conn =
-        cass::Conn::new(&format!("{}:{}", conf.cass_addr, conf.cass_port), conf.cass_pool_size).chain_err(|| "failed to connect to cassandra")?;
+    let conn = cass::Conn::new(&format!("{}:{}", conf.cass_addr, conf.cass_port),
+                               conf.cass_pool_size).chain_err(|| "failed to connect to cassandra")?;
+    let allowed_refs = referrer::AllowedReferrers(conf.referrers.clone());
     Err(Error::with_chain(rocket::ignite()
                               .mount("/", routes![handle_impression, handle_passby])
                               .attach(Template::fairing())
                               .manage(conn)
+                              .manage(allowed_refs)
                               .launch(),
                           "rocket error"))
 

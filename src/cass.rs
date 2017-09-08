@@ -130,7 +130,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
     type Error = ();
 
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Conn, ()> {
-        // let pool = request.guard::<State<Pool>>()?;
         let pool = request.guard::<State<Conn>>()?;
         Outcome::Success(Conn(pool.0.clone()))
     }
