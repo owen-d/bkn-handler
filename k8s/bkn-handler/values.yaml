@@ -38,8 +38,8 @@ nginx:
 replicaCount: 2
 bknHandler:
   repository: gcr.io/glassy-courage-146901/bkn-handler-rs
-  tag: e0e8f8412571
-  allowedReferers: 'our.sharecro.ws,my.sharecro.ws,sharecrows.com'
+  tag: fcb787a0d7a3
+  allowedReferrers: 'our.sharecro.ws,my.sharecro.ws,sharecrows.com'
   pullPolicy: IfNotPresent
   internalPort: 8080
   configs:

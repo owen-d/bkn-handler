@@ -37,7 +37,7 @@ spec:
               port: {{ .Values.nginx.internalPort }}
           resources:
 {{ toYaml .Values.nginx.resources | indent 12 }}
-        - name: {{ .Chart.Name }}-handler
+        - name: {{ .Chart.Name }}-rust
           image: "{{ .Values.bknHandler.repository}}:{{ .Values.bknHandler.tag }}"
           imagePullPolicy: "{{ .Values.bknHandler.pullPolicy}}"
           ports:
@@ -54,7 +54,7 @@ spec:
             - name: CASSANDRA_PORT
               value: {{ .Values.cassandra.port | quote }}
             - name: ALLOWED_REFERRERS
-              value: {{ .Values.bknHandler.allowedReferrers | quote }}
+              value: {{ .Values.bknHandler.allowedReferrers }}
           livenessProbe:
             httpGet:
               path: /
