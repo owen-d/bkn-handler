@@ -1,0 +1,15 @@
+bknHandler:
+  repository: gcr.io/glassy-courage-146901/bkn-handler-rs
+  tag: e0e8f8412571
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: bkn-handler
+  hosts:
+    - our.sharecro.ws
+  # tls:
+  #   - hosts:
+  #     - our.sharecro.ws
+  #     secretName: sharecrows-bkn-handler-tls
+

@@ -1,0 +1,57 @@
+debugMessage: yes
+# Default values for bkn-handler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## current b/c rate limit from letsencrypt:
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/tls-acme: "true"
+
+# serviceName, nodeport info
+service:
+  name: bkn-handler
+  type: NodePort
+  externalPort: 80
+  # internal port is inherited from nginx.internalPort
+
+
+
+
+# nginx details. make sure to set proxy pass to api internalPort & listen port  via env & sed injection
+nginx:
+  repository: gcr.io/glassy-courage-146901/sharecrows-api-proxy
+  tag: 9f19c6b80fea
+  pullPolicy: IfNotPresent
+  internalPort: 80
+  resources:
+    limits:
+      cpu: 50m
+      memory: 512Mi
+    requests:
+      cpu: 12m
+      memory: 256Mi
+
+# bkn-handler details
+replicaCount: 2
+bknHandler:
+  repository: gcr.io/glassy-courage-146901/bkn-handler-rs
+  tag: e0e8f8412571
+  allowedReferers: 'our.sharecro.ws,my.sharecro.ws,sharecrows.com'
+  pullPolicy: IfNotPresent
+  internalPort: 8080
+  configs:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 2Gi
+    requests:
+      cpu: 25m
+      memory: 1Gi
+
+# cassandra serviceName
+cassandra:
+  serviceName: cass-cassandra.cassandra
+  port: 9042

@@ -1,0 +1,71 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: "{{ .Chart.Name }}-nginx"
+          image: "{{ .Values.nginx.repository}}:{{ .Values.nginx.tag }}"
+          imagePullPolicy: "{{ .Values.nginx.pullPolicy}}"
+          ports:
+            - containerPort: {{ .Values.nginx.internalPort }}
+          env:
+            - name: LISTEN_PORT
+              value: {{ .Values.nginx.internalPort | quote }}
+            - name: PROXY_PORT
+              value: {{ .Values.bknHandler.internalPort | quote }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.nginx.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.nginx.internalPort }}
+          resources:
+{{ toYaml .Values.nginx.resources | indent 12 }}
+        - name: {{ .Chart.Name }}-handler
+          image: "{{ .Values.bknHandler.repository}}:{{ .Values.bknHandler.tag }}"
+          imagePullPolicy: "{{ .Values.bknHandler.pullPolicy}}"
+          ports:
+            - containerPort: {{ .Values.bknHandler.internalPort }}
+          env:
+            - name: ENV
+              value: "production"
+            - name: ROCKET_ENV
+              value: "production"
+            - name: ROCKET_PORT
+              value: {{ .Values.bknHandler.internalPort | quote }}
+            - name: CASSANDRA_ADDRESS
+              value: {{ .Values.cassandra.serviceName | quote }}
+            - name: CASSANDRA_PORT
+              value: {{ .Values.cassandra.port | quote }}
+            - name: ALLOWED_REFERRERS
+              value: {{ .Values.bknHandler.allowedReferrers | quote }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.bknHandler.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.bknHandler.internalPort }}
+          resources:
+{{ toYaml .Values.bknHandler.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
