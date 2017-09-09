@@ -1,6 +1,6 @@
 bknHandler:
   repository: gcr.io/glassy-courage-146901/bkn-handler-rs
-  tag: fcb787a0d7a3
+  tag: 875bfef6d76e
 
 ingress:
   enabled: true
