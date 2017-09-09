@@ -58,7 +58,8 @@ fn run() -> Result<()> {
                                conf.cass_pool_size).chain_err(|| "failed to connect to cassandra")?;
     let allowed_refs = AllowedReferrers(conf.referrers);
     Err(Error::with_chain(rocket::ignite()
-                              .mount("/", routes![home, handle_impression, handle_passby])
+                              .mount("/",
+                                     routes![healthcheck, handle_impression, handle_passby])
                               .attach(Template::fairing())
                               .manage(conn)
                               .manage(allowed_refs)
@@ -73,8 +74,8 @@ struct TemplateContext {
 }
 
 #[get("/")]
-fn home() -> Redirect {
-    Redirect::found(DEFAULT_REDIRECT_URL)
+fn healthcheck() -> () {
+    ()
 }
 
 /*
