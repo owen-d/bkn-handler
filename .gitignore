@@ -1,2 +1,9 @@
+#rust
 /target/
 **/*.rs.bk
+
+#emacs
+.#*
+
+# markdown rendering
+README.html
